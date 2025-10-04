@@ -1,0 +1,23 @@
+stages:
+ 
+  - deploy
+
+ 
+deploy_to_server:
+  stage: deploy
+  script:
+    - echo "Starting deployment..."
+    # SSH into the server and perform git pull
+    - ssh -i /home/adminbdd/.ssh/rsa-app-inv -o StrictHostKeyChecking=no  admin_inv@10.96.41.40 -p 2222 << 'EOF'
+    - set e
+    - cd /home/admin_inv/project-manager
+    - git checkout main
+    - git pull origin main
+    - npx prisma generate
+    - npm run build
+    - pm2 restart all
+    - echo "Deployment finished."
+    - echo "Restart service"
+    - EOF
+  only:
+    - main  # Trigger only on pushes to the 'main' branch

@@ -1,0 +1,22 @@
+@import "flowbite"; /* Import Flowbite styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Ensure html and body take full height */
+
+html, body {
+    height: 100%;
+    margin: 0; /* Removes default margin */
+  }
+
+.min-h-svh {
+    min-height: 100svh;
+}  
+
+.bg-light-gray{
+  background: #F9FAFB;
+}
+.border-none input{
+  border: none !important;
+}
+ 

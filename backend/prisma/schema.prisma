@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id                String                @id @default(cuid())
+  name              String?               @db.Text
+  description       String?               @db.Text
+  quartierId        String
+  deploiments       Deploiment[]
+  noeuds            Noeud[]
+  quartier          Quartier              @relation(fields: [quartierId], references: [id], onDelete: Cascade)
+  projectDevelopers Project_developpers[]
+  projectsRisques   Projects_risques[]
+  sprints           Sprint[]
+}
+
+model Sprint {
+  id                 String               @id @default(cuid())
+  sprint_name        String               @db.Text
+  start_date         DateTime
+  end_date           DateTime?
+  finished_at        DateTime?
+  status             Int                  @default(0) // 0=pending,1=started,2=completed,3=finished
+  projectId          String?
+  project            Project?             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  Sprint_developpers Sprint_developpers[]
+  tasks              Task[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  designation String
+  description String?   @db.Text
+  start_date  DateTime
+  end_date    DateTime?
+  finished_at DateTime?
+  status      Int       @default(0) // 0=pending,1=started,2=completed,3=finished
+  developerId String?
+  sprintId    String?
+
+  developer User?   @relation(fields: [developerId], references: [id])
+  sprint    Sprint? @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+}
+
+model Deploiment {
+  id            String           @id @default(cuid())
+  type          String           @db.Text
+  link          String?          @db.Text
+  repository    String?          @db.Text
+  is_alive      String?          @db.Text
+  projectId     String
+  project       Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  DeployHistory Deploy_history[]
+}
+
+model Deploy_history {
+  id           String   @id @default(cuid())
+  deploimentId String
+  commit       String   @db.Text
+  date_dep     DateTime
+  author       String?
+  is_success   Boolean
+
+  deploiment Deploiment @relation(fields: [deploimentId], references: [id], onDelete: Cascade)
+}
+
+model Quartier {
+  id            String  @id @default(cuid())
+  code_quartier String  @db.VarChar(10)
+  nom           String  @db.Text
+  description   String? @db.Text
+  zoneId        String
+
+  Project Project[]
+  zone    Zone      @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+}
+
+model Zone {
+  id          String  @id @default(cuid())
+  code_zone   String  @db.VarChar(10)
+  nom         String  @db.Text
+  description String? @db.Text
+
+  quartiers Quartier[]
+}
+
+model Noeud {
+  id              String  @id @default(cuid())
+  designation     String  @db.Text
+  description     String? @db.Text
+  repository_link String? @db.Text
+  typeNoeudId     String
+  devStackId      String
+  projectId       String
+  network         String? @db.Text
+
+  Infrastructure Infrastructure[]
+  dev_stack      Dev_stack        @relation(fields: [devStackId], references: [id], onDelete: Cascade)
+  project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type_noeud     Type_noeud       @relation(fields: [typeNoeudId], references: [id], onDelete: Cascade)
+}
+
+model Infrastructure {
+  id       String @id @default(cuid())
+  noeudId  String
+  network  String @db.Text
+  port     Int
+  in_out   String @db.Text
+  protocol String @db.Text
+
+  noeud Noeud @relation(fields: [noeudId], references: [id], onDelete: Cascade)
+}
+
+model Dev_stack {
+  id                   String  @id @default(cuid())
+  framework            String  @db.Text
+  programming_language String  @db.Text
+  version              String? @db.Text
+
+  developpersStack Developpers_stack[]
+  noeuds           Noeud[]
+}
+
+model Developpers_stack {
+  id         String @id @default(cuid())
+  devStackId String
+  userId     String
+
+  dev_stack Dev_stack @relation(fields: [devStackId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, devStackId])
+}
+
+model User {
+  id            String  @id @default(cuid())
+  email         String  @unique
+  username      String
+  job_title     String
+  is_developper Boolean @default(true)
+  is_admin      Boolean @default(false)
+  password      String?
+
+  developpersStack   Developpers_stack[]
+  projectDevelopers  Project_developpers[]
+  Sprint_developpers Sprint_developpers[]
+  tasks              Task[]
+  notifications      Notification[]
+}
+
+model Project_developpers {
+  id        String  @id @default(cuid())
+  is_lead   Boolean @default(false)
+  userId    String
+  projectId String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Sprint_developpers {
+  id       String  @id @default(cuid())
+  is_lead  Boolean @default(false)
+  userId   String
+  sprintId String
+
+  sprint Sprint @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sprintId, userId])
+}
+
+model Projects_risques {
+  id        String @id @default(cuid())
+  projectId String
+  risqueId  String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  risque  Risque  @relation(fields: [risqueId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, risqueId])
+}
+
+model Risque {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  severity    Int     @default(1)
+
+  Projects_risques Projects_risques[]
+}
+
+model Type_noeud {
+  id          String  @id @default(cuid())
+  designation String? @db.Text
+  description String? @db.Text
+
+  noeuds Noeud[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String   @db.Text
+  type      String 
+  entityId  String 
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

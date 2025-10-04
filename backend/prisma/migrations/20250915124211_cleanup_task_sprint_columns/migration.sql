@@ -1,0 +1,24 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Sprint] ADD [finished_at] DATETIME2,
+[status] INT NOT NULL CONSTRAINT [Sprint_status_df] DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE [dbo].[Task] ADD [finished_at] DATETIME2,
+[status] INT NOT NULL CONSTRAINT [Task_status_df] DEFAULT 0;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

@@ -1,0 +1,20 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Sprint] ADD [isActive] BIT NOT NULL CONSTRAINT [Sprint_isActive_df] DEFAULT 1,
+[isCompleted] BIT NOT NULL CONSTRAINT [Sprint_isCompleted_df] DEFAULT 0;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
